@@ -10,8 +10,9 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "https://t4bnhxfl-5173.inc1.devtunnels.ms",
+      // "http://localhost:5173",
+      // "https://t4bnhxfl-5173.inc1.devtunnels.ms",
+      "https://interview-ai-project.netlify.app",
     ], // Frontend URL
     credentials: true, // Allow cookies to be sent
   }),
