@@ -185,7 +185,7 @@ async function generatePdfFromHtml(htmlContent) {
     ],
     headless: true,
     timeout: 0,
-    executablePath: "/path/to/Chrome",
+    
   });
   const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle2" });
