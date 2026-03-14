@@ -77,28 +77,57 @@ async function getInterviewReportByIdController(req, res) {
  * @description Controller to generate resume PDF based on user self description , resume and job description.
  */
 async function generateResumePdfController(req, res) {
-  const {interviewReportId} = req.params
-  const interviewReport = await interviewReportModel.findById(interviewReportId)
+  // const {interviewReportId} = req.params
+  // const interviewReport = await interviewReportModel.findById(interviewReportId)
   
-  if(!interviewReport){
-    return res.status(404).json({message:"Interview report not found"})
+  // if(!interviewReport){
+  //   return res.status(404).json({message:"Interview report not found"})
 
-  }
+  // }
 
-  const {resume, selfDescription, jobDescription} = interviewReport
+  // const {resume, selfDescription, jobDescription} = interviewReport
 
-  const pdfBuffer = await generateResumePdf({
-    resume,
-    selfDescription,
-    jobDescription
-  })
+  // const pdfBuffer = await generateResumePdf({
+  //   resume,
+  //   selfDescription,
+  //   jobDescription
+  // })
 
-  res.set({
-    "Content-Type": "application/pdf",
-    "Content-Disposition": `attachment; filename=resume_${interviewReportId}.pdf`,
-  })
+  // res.set({
+  //   "Content-Type": "application/pdf",
+  //   "Content-Disposition": `attachment; filename=resume_${interviewReportId}.pdf`,
+  // })
 
-  res.send(pdfBuffer)
+  // res.send(pdfBuffer)
+
+   try {
+     const { interviewReportId } = req.params;
+
+     const interviewReport =
+       await interviewReportModel.findById(interviewReportId);
+
+     if (!interviewReport) {
+       return res.status(404).json({ message: "Interview report not found" });
+     }
+
+     const { resume, selfDescription, jobDescription } = interviewReport;
+
+     const pdfBuffer = await generateResumePdf({
+       resume,
+       selfDescription,
+       jobDescription,
+     });
+
+     res.set({
+       "Content-Type": "application/pdf",
+       "Content-Disposition": `attachment; filename=resume_${interviewReportId}.pdf`,
+     });
+
+     res.send(pdfBuffer);
+   } catch (error) {
+     console.error(error);
+     res.status(500).json({ message: "PDF generation failed" });
+   }
 }
 
 module.exports = {
