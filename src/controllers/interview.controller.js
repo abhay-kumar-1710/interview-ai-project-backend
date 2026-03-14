@@ -5,30 +5,82 @@ const interviewReportModel = require("../models/interviewReport.model");
 /**
  * @description Generate an interview report based on the candidate's resume, job description and self description
  */
+// async function generateInterviewReportController(req, res) {
+//   const resumeContent = await new pdfParse.PDFParse(
+//     Uint8Array.from(req.file.buffer),
+//   ).getText();
+//   const { selfDescription, jobDescription } = req.body;
+
+//   const interviewReportByAi = await generateInterviewReport({
+//     resume: resumeContent.text,
+//     jobDescription,
+//     selfDescription,
+//   });
+
+//   const interviewReport = await interviewReportModel.create({
+//     user: req.user.id,
+//     resume: resumeContent.text,
+//     jobDescription,
+//     selfDescription,
+//     ...interviewReportByAi,
+//   });
+
+//   res.status(201).json({
+//     message: "Interview report generated successfully",
+//     interviewReport,
+//   });
+// }
+
+/**
+ * @description Generate an interview report based on the candidate's resume, job description and self description
+ */
 async function generateInterviewReportController(req, res) {
-  const resumeContent = await new pdfParse.PDFParse(
-    Uint8Array.from(req.file.buffer),
-  ).getText();
-  const { selfDescription, jobDescription } = req.body;
+  try {
+    const resumeContent = await new pdfParse.PDFParse(
+      Uint8Array.from(req.file.buffer),
+    ).getText();
 
-  const interviewReportByAi = await generateInterviewReport({
-    resume: resumeContent.text,
-    jobDescription,
-    selfDescription,
-  });
+    const { selfDescription, jobDescription } = req.body;
 
-  const interviewReport = await interviewReportModel.create({
-    user: req.user.id,
-    resume: resumeContent.text,
-    jobDescription,
-    selfDescription,
-    ...interviewReportByAi,
-  });
+    const interviewReportByAi = await generateInterviewReport({
+      resume: resumeContent.text,
+      jobDescription,
+      selfDescription,
+    });
 
-  res.status(201).json({
-    message: "Interview report generated successfully",
-    interviewReport,
-  });
+    const interviewReport = await interviewReportModel.create({
+      user: req.user.id,
+      resume: resumeContent.text,
+      jobDescription,
+      selfDescription,
+      ...interviewReportByAi,
+    });
+
+    res.status(201).json({
+      message: "Interview report generated successfully",
+      interviewReport,
+    });
+  } catch (error) {
+    console.error("Gemini Error:", error);
+
+    // 🔥 Gemini high demand
+    if (error.status === 503) {
+      return res.status(503).json({
+        message: "AI model is currently overloaded. Please try again shortly.",
+      });
+    }
+
+    // 🔥 Gemini quota exceeded
+    if (error.status === 429) {
+      return res.status(429).json({
+        message: "Daily AI request limit reached. Please try again tomorrow.",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to generate interview report",
+    });
+  }
 }
 
 /**
@@ -77,28 +129,7 @@ async function getInterviewReportByIdController(req, res) {
  * @description Controller to generate resume PDF based on user self description , resume and job description.
  */
 async function generateResumePdfController(req, res) {
-  // const {interviewReportId} = req.params
-  // const interviewReport = await interviewReportModel.findById(interviewReportId)
-  
-  // if(!interviewReport){
-  //   return res.status(404).json({message:"Interview report not found"})
-
-  // }
-
-  // const {resume, selfDescription, jobDescription} = interviewReport
-
-  // const pdfBuffer = await generateResumePdf({
-  //   resume,
-  //   selfDescription,
-  //   jobDescription
-  // })
-
-  // res.set({
-  //   "Content-Type": "application/pdf",
-  //   "Content-Disposition": `attachment; filename=resume_${interviewReportId}.pdf`,
-  // })
-
-  // res.send(pdfBuffer)
+ 
 
    try {
      const { interviewReportId } = req.params;
@@ -125,8 +156,23 @@ async function generateResumePdfController(req, res) {
 
      res.send(pdfBuffer);
    } catch (error) {
-     console.error(error);
-     res.status(500).json({ message: "PDF generation failed" });
+      console.error("Resume PDF error:", error);
+
+      if (error.status === 503) {
+        return res.status(503).json({
+          message: "AI service is currently busy. Try again in a moment.",
+        });
+      }
+
+      if (error.status === 429) {
+        return res.status(429).json({
+          message: "Daily AI quota exhausted. Please try again later.",
+        });
+      }
+
+      res.status(500).json({
+        message: "PDF generation failed",
+      });
    }
 }
 
